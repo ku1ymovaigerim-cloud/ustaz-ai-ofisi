@@ -29,7 +29,9 @@ export default async function handler(req, res) {
     const isGame = agentId === 'galileo' || mode === 'review';
     const system = mode === 'review' ? REVIEW_SYSTEM : (SYSTEMS[agentId] || SYSTEMS.ayala);
 
-    const response = await fetch('https://groq.com', {
+    const groqUrl = ["https://groq.com", "openai", "v1", "chat", "completions"].join("/");
+
+    const response = await fetch(groqUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,4 +69,3 @@ export default async function handler(req, res) {
     return send(500, { error: err.message || 'Сервер қатесі.' });
   }
 }
- 
