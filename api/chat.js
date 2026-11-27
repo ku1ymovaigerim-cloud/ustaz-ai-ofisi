@@ -1,4 +1,4 @@
-const MODELS = ["gemini-3.8-flash-lite", "gemini-3.8-flash"];
+const MODELS = ["gemini-3.8-flash", "gemini-3.8-flash-lite"];
 
 const SCHOOL = `Сен Қазақстан мектебінің мұғаліміне қазақ тілінде көмектесесің. Материалды берілген пәнге, сыныпқа және Қазақстанның оқу бағдарламасындағы оқу мақсатына сәйкестендір. Мыналар міндетті: оқу мақсаты, сабақ мақсаты, бағалау критерийлері, өлшенетін дескрипторлар; сабақтың басы, ортасы, соңы және рефлексия. Уақыт көрсетілмесе 45 минут деп болжа. Ресми оқу мақсаты коды берілмесе «Ресми оқу мақсатының кодын мұғалім нақтылайды» деп жаз. Markdown қолдан; кестелерде әр жолды бөлек жаз, ұяшық ішіндегі жаңа жолды <br> деп бер.`;
 
@@ -20,12 +20,14 @@ async function askGemini(key, modelName, system, prompt, isGame) {
       'Content-Type': 'application/json',
       'x-goog-api-key': key
     },
+    signal: AbortSignal.timeout(8500),
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.35,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 2500,
+        thinkingConfig: { thinkingBudget: 0 },
         ...(isGame ? { responseMimeType: 'application/json' } : {})
       }
     })
@@ -63,9 +65,11 @@ export default async function handler(req, res) {
     const isGame = agentId === 'galileo';
     const system = SYSTEMS[agentId] || SYSTEMS.ayala;
 
-    let result = await askGemini(key, MODELS.at(0), system, prompt, isGame);
-    if (!result.ok) {
-      result = await askGemini(key, MODELS.at(1), system, prompt, isGame);
+    let result;
+    try {
+      result = await askGemini(key, MODELS.at(0), system, prompt, isGame);
+    } catch {
+      result = { ok: false, status: 504, data: { error: { message: 'Сервер баяу жауап берді, қайта басыңыз.' } } };
     }
 
     if (!result.ok) {
