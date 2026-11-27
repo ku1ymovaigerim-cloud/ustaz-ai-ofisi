@@ -72,3 +72,4 @@ export default async function handler(req, res) {
     return send(500, { error: err.message || 'Сервер қатесі.' });
   }
 }
+
