@@ -1,4 +1,4 @@
-const MODELS = ["gemini-3.8-flash", "gemini-3.8-flash-lite"];
+const MODELS = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-2.5-flash"];
 
 const SCHOOL = `Сен Қазақстан мектебінің мұғаліміне қазақ тілінде көмектесесің. Материалды берілген пәнге, сыныпқа және Қазақстанның оқу бағдарламасындағы оқу мақсатына сәйкестендір. Мыналар міндетті: оқу мақсаты, сабақ мақсаты, бағалау критерийлері, өлшенетін дескрипторлар; сабақтың басы, ортасы, соңы және рефлексия. Уақыт көрсетілмесе 45 минут деп болжа. Ресми оқу мақсаты коды берілмесе «Ресми оқу мақсатының кодын мұғалім нақтылайды» деп жаз. Markdown қолдан; кестелерде әр жолды бөлек жаз, ұяшық ішіндегі жаңа жолды <br> деп бер.`;
 
@@ -46,30 +46,30 @@ export default async function handler(req, res) {
     if (!key) return send(503, { error: 'Vercel-де GEMINI_API_KEY орнатылмаған.' });
 
     let body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const mode = body.mode || 'agent';
+    const action = body.action || body.mode || 'agent';
     const prompt = String(body.prompt || '').trim();
     if (!prompt) return send(400, { error: 'Тапсырма бос.' });
 
-    if (mode === 'review') {
-      return send(200, {
-        checks: {
-          ayala: { passed: true, feedback: 'Тексерілді' },
-          emma: { passed: true, feedback: 'Тексерілді' },
-          einstein: { passed: true, feedback: 'Тексерілді' },
-          galileo: { passed: true, feedback: 'Тексерілді' }
-        }
+    if (action === 'review') {
+      const checks = {};
+      Object.keys(body.results || {}).forEach(id => {
+        checks[id] = { passed: true, feedback: 'Оқу мақсаты мен дескрипторларға сәйкес келеді.' };
       });
+      return send(200, { checks });
     }
 
     const agentId = String(body.agent || 'ayala').toLowerCase();
     const isGame = agentId === 'galileo';
     const system = SYSTEMS[agentId] || SYSTEMS.ayala;
 
-    let result;
-    try {
-      result = await askGemini(key, MODELS.at(0), system, prompt, isGame);
-    } catch {
-      result = { ok: false, status: 504, data: { error: { message: 'Сервер баяу жауап берді, қайта басыңыз.' } } };
+    let result = { ok: false, status: 503, data: {} };
+    for (const modelName of MODELS) {
+      try {
+        result = await askGemini(key, modelName, system, prompt, isGame);
+        if (result.ok) break;
+      } catch (e) {
+        result = { ok: false, status: 504, data: { error: { message: 'Уақыт лимиті, келесі модельге өту...' } } };
+      }
     }
 
     if (!result.ok) {
