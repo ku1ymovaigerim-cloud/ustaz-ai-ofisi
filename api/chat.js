@@ -35,16 +35,19 @@ async function generateGemini(prompt, { system, json = false } = {}) {
     throw new GeminiError('Vercel баптауында GEMINI_API_KEY орнатылмаған.', 503);
   }
 
-  const url = `https://googleapis.com{GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const url = "https://googleapis.com" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(key);
 
   const payload = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.35,
-      maxOutputTokens: 8192,
-      ...(json ? { responseMimeType: 'application/json' } : {})
+      maxOutputTokens: 8192
     }
   };
+
+  if (json) {
+    payload.generationConfig.responseMimeType = 'application/json';
+  }
 
   if (system) {
     payload.systemInstruction = { parts: [{ text: system }] };
@@ -58,19 +61,17 @@ async function generateGemini(prompt, { system, json = false } = {}) {
       body: JSON.stringify(payload)
     });
   } catch (e) {
-    throw new GeminiError('Google Gemini-ге қосылу мүмкін болмады.', 502);
+    throw new GeminiError('Желі қатесі: ' + (e.message || 'қосылу мүмкін болмады'), 502);
   }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const detail = data?.error?.message || ('HTTP ' + response.status);
+    const detail = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + response.status);
     throw new GeminiError('Gemini қатесі: ' + detail, response.status === 429 ? 429 : 502);
   }
 
-  const text = data.candidates?.[0]?.content?.parts
-    ?.filter(p => typeof p.text === 'string')
-    .map(p => p.text)
-    .join('') || '';
+  const parts = (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+  const text = parts.filter(p => typeof p.text === 'string').map(p => p.text).join('');
 
   if (!text) {
     throw new GeminiError('Gemini бос жауап қайтарды.', 502);
@@ -92,8 +93,8 @@ export default async function handler(req, res) {
       body = JSON.parse(body);
     }
 
-    const mode = body?.mode || 'agent';
-    const prompt = String(body?.prompt || '').trim();
+    const mode = (body && body.mode) || 'agent';
+    const prompt = String((body && body.prompt) || '').trim();
     if (!prompt) {
       return send(400, { error: 'Тапсырма мәтіні бос.' });
     }
@@ -109,7 +110,7 @@ export default async function handler(req, res) {
       return send(200, parsed);
     }
 
-    const agentId = String(body?.agent || 'ayala').toLowerCase();
+    const agentId = String((body && body.agent) || 'ayala').toLowerCase();
     const system = SYSTEMS[agentId] || SYSTEMS.ayala;
     const isGame = agentId === 'galileo';
 
