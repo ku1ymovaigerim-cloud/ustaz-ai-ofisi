@@ -329,6 +329,32 @@ document.addEventListener('pointerdown',unlockAudio,{once:true});document.addEve
 document.getElementById('soundBtn').onclick=function(){unlockAudio();soundOn=!soundOn;try{localStorage.setItem('officeSound',soundOn?'on':'off')}catch(e){}soundLabel();if(soundOn)officeTone(true)};soundLabel();
 var baseToast=toast;toast=function(message){baseToast(message);if(/тексерілді|жүктеулерінен/.test(message))officeTone(true)};
 // A refresh never contacts Gemini. Only a submitted task calls /api/chat.
+(function(){
+  var origStart = start;
+  start = async function() {
+    var q = document.getElementById('prompt').value.trim();
+    if (q && !busy && !exporting && typeof needed === 'function' && typeof move === 'function') {
+      var ids = needed(q);
+      var firstId = ids.at(0);
+      if (firstId && agents[firstId]) {
+        var hx = agents[firstId].home.at(0);
+        var hy = agents[firstId].home.at(1);
+        move('aigerim', hx - 48, hy + 20, 'Міне, орында!');
+        setTimeout(function() {
+          ids.forEach(function(id) {
+            if (agents[id]) {
+              move(id, agents[id].home.at(0), agents[id].home.at(1), 'Орындап жатырмын...');
+            }
+          });
+        }, 900);
+      }
+    }
+    await origStart.apply(this, arguments);
+    if (typeof move === 'function' && typeof coordinatorHome !== 'undefined') {
+      move('aigerim', coordinatorHome.at(0), coordinatorHome.at(1), 'Жұмыс аяқталды!');
+    }
+  };
+})();
 
 </script>
 </body></html>
