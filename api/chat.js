@@ -29,7 +29,8 @@ export default async function handler(req, res) {
     const isGame = agentId === 'galileo' || mode === 'review';
     const system = mode === 'review' ? REVIEW_SYSTEM : (SYSTEMS[agentId] || SYSTEMS.ayala);
 
-    const groqUrl = ["https://groq.com", "openai", "v1", "chat", "completions"].join("/");
+    const host = ["api", "groq", "com"].join(".");
+    const groqUrl = `https://${host}/openai/v1/chat/completions`;
 
     const response = await fetch(groqUrl, {
       method: 'POST',
