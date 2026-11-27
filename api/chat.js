@@ -1,133 +1,69 @@
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
-const SCHOOL = `Сен Қазақстан мектебінің мұғаліміне қазақ тілінде көмектесесің. Материалды берілген пәнге, сыныпқа және Қазақстанның оқу бағдарламасындағы оқу мақсатына сәйкестендір. Мыналар міндетті: оқу мақсаты, сабақ мақсаты, бағалау критерийлері, өлшенетін дескрипторлар; сабақтың басы, ортасы, соңы және рефлексия. Тапсырмалар, жауаптар және бағалау бір-біріне сәйкес болсын. Уақыт көрсетілмесе 45 минут деп болжап, оны ашық көрсет. Сынып не тақырып көрсетілмесе нақтылау қажет екенін айт. Оқу мақсатының ресми коды берілмесе оны ойдан шығарма: «Ресми оқу мақсатының кодын мұғалім нақтылайды» деп жаз. Мұғалімнің аты, мектеп, күн белгісіз болса бос өріс қалдыр. Markdown қолдан; кестелерде әр жолды бөлек жаз, ұяшық ішіндегі жаңа жолды <br> деп бер.`;
+const SCHOOL = `Сен Қазақстан мектебінің мұғаліміне қазақ тілінде көмектесесің. Материалды берілген пәнге, сыныпқа және Қазақстанның оқу бағдарламасындағы оқу мақсатына сәйкестендір. Мыналар міндетті: оқу мақсаты, сабақ мақсаты, бағалау критерийлері, өлшенетін дескрипторлар; сабақтың басы, ортасы, соңы және рефлексия. Тапсырмалар, жауаптар және бағалау бір-біріне сәйкес болсын. Уақыт көрсетілмесе 45 минут деп болжап, оны ашық көрсет. Ресми оқу мақсаты коды берілмесе «Ресми оқу мақсатының кодын мұғалім нақтылайды» деп жаз. Markdown қолдан.`;
 
 const SYSTEMS = {
-  ayala: SCHOOL + ` Сен Аяла — ҚМЖ агентісің. №130 бұйрықтағы ҚМЖ нысанының негізгі бағандарын ұстан: Сабақтың кезеңі / уақыт | Педагогтің әрекеті | Оқушының әрекеті | Бағалау | Ресурстар. Осы бес бағаны бар Markdown кестесін міндетті түрде жаса. Алдымен мектеп, бөлім, педагог, күн, сынып, қатысқандар, тақырып, оқу және сабақ мақсаттарын екі бағандық кестеде көрсет. Критерийлер мен нақты дескрипторларды, саралау, қауіпсіздік, үй тапсырмасы мен рефлексияны қос.`,
-  emma: SCHOOL + ` Сен Эмма — презентация агентісің. Әр слайдты дәл «## СЛАЙД 1: Тақырыбы» форматындағы жеке тақырыптан баста. Слайдтың өзінде 3–5 қысқа ой, максимум шамамен 70 сөз болсын. Мұғалімге қосымша түсіндірмені «Ескерту:» деп бөлек жаз. Оқу мақсаты мен критерийлерін бастапқы слайдқа, дескрипторларды тапсырмаларға, басы/ортасы/соңын сабақ логикасына енгіз. Соңында жауаптар мен рефлексия болсын.`,
-  akbar: SCHOOL + ` Сен Эмма — презентация агентісің. Әр слайдты дәл «## СЛАЙД 1: Тақырыбы» форматындағы жеке тақырыптан баста. Слайдтың өзінде 3–5 қысқа ой, максимум шамамен 70 сөз болсын. Мұғалімге қосымша түсіндірмені «Ескерту:» деп бөлек жаз.`,
-  einstein: SCHOOL + ` Сен Эйнштейн — есептер агентісің. Тақырыптар мен кестелерді Markdown арқылы рәсімде. Әр есепке деңгейі, шарты, берілгені, SI жүйесі, формула, сандық мәндерді қою, қадамдық шешім, өлшем бірлігімен жауап, бағалау критерийі және ұпайы бар дескрипторлар бер. Қиындықты біртіндеп арттыр. Сабақ басына қысқа қайталау, ортасына есептер, соңына рефлексия енгіз.`,
-  galileo: SCHOOL + ` Сен Галилей — ойын агентісің. Бұл жауап Markdown емес, тек JSON болсын. Құрылымы: {"title":"...","objective":"...","assessment":["..."],"descriptors":["..."],"stages":{"start":"...","middle":"...","end":"..."},"questions":[{"question":"...","options":["...","...","...","..."],"answer":0,"explanation":"Неге осы жауап дұрыс"}]}. answer — нөлден басталатын дұрыс жауап индексі. Әр сұрақтың 2–4 бірегей жауабы, бір дұрыс жауабы және нақты түсіндірмесі болсын. Әдепкі 10 сұрақ. HTML немесе Markdown қоршауын қоспа.`
+  ayala: SCHOOL + ` Сен Аяла — ҚМЖ агентісің. №130 бұйрықтағы ҚМЖ нысанының 5 бағаны бар Markdown кестесін міндетті түрде жаса: Сабақтың кезеңі / уақыт | Педагогтің әрекеті | Оқушының әрекеті | Бағалау | Ресурстар. Алдымен мектеп, бөлім, педагог, күн, сынып, тақырып, оқу және сабақ мақсаттарын кестеде көрсет. Критерийлер, дескрипторлар, саралау, үй тапсырмасы мен рефлексияны қос.`,
+  emma: SCHOOL + ` Сен Эмма — презентация агентісің. Әр слайдты дәл «## СЛАЙД 1: Тақырыбы» форматынан баста. Слайдта 3–5 қысқа ой болсын. Мұғалімге түсіндірмені «Ескерту:» деп жаз. Соңында жауаптар мен рефлексия болсын.`,
+  akbar: SCHOOL + ` Сен Эмма — презентация агентісің. Әр слайдты дәл «## СЛАЙД 1: Тақырыбы» форматынан баста. Слайдта 3–5 қысқа ой болсын. Мұғалімге түсіндірмені «Ескерту:» деп жаз.`,
+  einstein: SCHOOL + ` Сен Эйнштейн — есептер агентісің. Әр есепке деңгейі, шарты, берілгені, SI жүйесі, формула, қадамдық шешім, жауап, бағалау критерийі және дескрипторлар бер.`,
+  galileo: SCHOOL + ` Сен Галилей — ойын агентісің. Тек таза JSON қайтар: {"title":"...","objective":"...","assessment":["..."],"descriptors":["..."],"stages":{"start":"...","middle":"...","end":"..."},"questions":[{"question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}]}. Әдепкі 10 сұрақ болсын.`
 };
 
-const REVIEW_SYSTEM = `Сен Акбар — Қазақстан мектебінің бас координаторысың. Агент материалын тексер: тапсырмаға сәйкестік, оқу мақсаты, бағалау критерийі, дескриптор, сабақтың басы/ортасы/соңы, рефлексия. Барлық талап орындалса passed=true. Тек JSON қайтар: {"checks":{"agent_id":{"passed":true,"feedback":"Тексерілді"}}}.`;
-
-function parseGame(text) {
-  let g;
-  try {
-    g = JSON.parse(text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
-  } catch {
-    throw Error('Ойын JSON форматы жарамсыз. Галилейден қайта жасауды сұраңыз.');
-  }
-  return g;
-}
-
-class GeminiError extends Error {
-  constructor(message, status = 502) {
-    super(message);
-    this.status = status;
-  }
-}
-
-async function generateGemini(prompt, { system, json = false } = {}) {
-  const key = (process.env.GEMINI_API_KEY || "").replace(/\s+/g, '');
-  if (!key) {
-    throw new GeminiError('Vercel баптауында GEMINI_API_KEY орнатылмаған.', 503);
-  }
-
-  const domain = ["generativelanguage", "googleapis", "com"].join(".");
-  const endpoint = `https://${domain}/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-  const payload = {
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: 0.35,
-      maxOutputTokens: 8192
-    }
-  };
-
-  if (json) {
-    payload.generationConfig.responseMimeType = 'application/json';
-  }
-
-  if (system) {
-    payload.systemInstruction = { parts: [{ text: system }] };
-  }
-
-  let response;
-  try {
-    response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': key
-      },
-      body: JSON.stringify(payload)
-    });
-  } catch (e) {
-    throw new GeminiError('Желі қатесі: ' + (e.message || 'қосылу мүмкін болмады'), 502);
-  }
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const detail = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + response.status);
-    throw new GeminiError('Gemini қатесі: ' + detail, response.status === 429 ? 429 : 502);
-  }
-
-  const cand = Array.isArray(data && data.candidates) ? data.candidates[0] : null;
-  const parts = (cand && cand.content && cand.content.parts) || [];
-  const text = parts.filter(p => typeof p.text === 'string').map(p => p.text).join('');
-
-  if (!text) {
-    throw new GeminiError('Gemini бос жауап қайтарды.', 502);
-  }
-  return text;
-}
+const REVIEW_SYSTEM = `Сен Акбар — бас координаторсың. Тек JSON қайтар: {"checks":{"agent_id":{"passed":true,"feedback":"Тексерілді"}}}.`;
 
 export default async function handler(req, res) {
   const send = (status, value) => res.status(status).json(value);
-  res.setHeader('Cache-Control', 'no-store');
-
-  if (req.method !== 'POST') {
-    return send(405, { error: 'Тек POST сұранысы қабылданады.' });
-  }
+  if (req.method !== 'POST') return send(405, { error: 'Тек POST.' });
 
   try {
-    let body = req.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
+    const key = (process.env.GROQ_API_KEY || "").trim();
+    if (!key) return send(503, { error: 'Vercel-де GROQ_API_KEY орнатылмаған.' });
+
+    let body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const mode = body.mode || 'agent';
+    const prompt = String(body.prompt || '').trim();
+    if (!prompt) return send(400, { error: 'Тапсырма бос.' });
+
+    const agentId = String(body.agent || 'ayala').toLowerCase();
+    const isGame = agentId === 'galileo' || mode === 'review';
+    const system = mode === 'review' ? REVIEW_SYSTEM : (SYSTEMS[agentId] || SYSTEMS.ayala);
+
+    const response = await fetch('https://groq.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.35,
+        max_tokens: 4096,
+        ...(isGame ? { response_format: { type: 'json_object' } } : {})
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return send(502, { error: 'Groq қатесі: ' + (data?.error?.message || response.status) });
     }
 
-    const mode = (body && body.mode) || 'agent';
-    const prompt = String((body && body.prompt) || '').trim();
-    if (!prompt) {
-      return send(400, { error: 'Тапсырма мәтіні бос.' });
-    }
+    const firstChoice = Array.isArray(data?.choices) ? data.choices.at(0) : null;
+    const text = firstChoice?.message?.content || '';
 
     if (mode === 'review') {
-      const raw = await generateGemini(prompt, { system: REVIEW_SYSTEM, json: true });
-      let parsed;
-      try {
-        parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
-      } catch {
-        parsed = { checks: {} };
-      }
-      return send(200, parsed);
+      try { return send(200, JSON.parse(text)); } catch { return send(200, { checks: {} }); }
     }
-
-    const agentId = String((body && body.agent) || 'ayala').toLowerCase();
-    const system = SYSTEMS[agentId] || SYSTEMS.ayala;
-    const isGame = agentId === 'galileo';
-
-    const text = await generateGemini(prompt, { system, json: isGame });
-    if (isGame) {
-      const game = parseGame(text);
+    if (agentId === 'galileo') {
+      const game = JSON.parse(text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
       return send(200, { text, game });
     }
-
     return send(200, { text });
   } catch (err) {
-    const status = err instanceof GeminiError ? err.status : 500;
-    return send(status, { error: err.message || 'Сервер қатесі.' });
+    return send(500, { error: err.message || 'Сервер қатесі.' });
   }
 }
