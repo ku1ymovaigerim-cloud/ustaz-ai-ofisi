@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return send(405, { error: 'Тек POST.' });
 
   try {
-  const key = (process.env.GROQ_API_KEY || "").replace(/\s+/g, '');
+    const key = (process.env.GROQ_API_KEY || "").replace(/\s+/g, '');
     if (!key) return send(503, { error: 'Vercel-де GROQ_API_KEY орнатылмаған.' });
 
     let body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
@@ -51,10 +51,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json().catch(() => ({}));
-       if (!response.ok) {
-      return send(502, { error: 'Groq қатесі: ' + (data?.error?.message || response.status) + ' [Кілт басы: ' + key.slice(0, 8) + ', ұзындығы: ' + key.length + ']' });
-    }
-
+    if (!response.ok) {
+      return send(502, {
+        error: 'Groq қатесі: ' + (data?.error?.message || response.status) + ' [Кілт басы: ' + key.slice(0, 8) + ', ұзындығы: ' + key.length + ']'
+      });
     }
 
     const firstChoice = Array.isArray(data?.choices) ? data.choices.at(0) : null;
