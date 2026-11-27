@@ -1,6 +1,6 @@
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+const GEMINI_MODEL = "gemini-2.5-flash";
 
-const SCHOOL = `Сен Қазақстан мектебінің мұғаліміне қазақ тілінде көмектесесің. Материалды берілген пәнге, сыныпқа және Қазақстанның оқу бағдарламасындағы оқу мақсатына сәйкестендір. Мыналар міндетті: оқу мақсаты, сабақ мақсаты, бағалау критерийлері, өлшенетін дескрипторлар; сабақтың басы, ортасы, соңы және рефлексия. Тапсырмалар, жауаптар және бағалау бір-біріне сәйкес болсын. Уақыт көрсетілмесе 45 минут деп болжап, оны ашық көрсет. Ресми оқу мақсаты коды берілмесе «Ресми оқу мақсатының кодын мұғалім нақтылайды» деп жаз. Markdown қолдан.`;
+const SCHOOL = `Сен Қазақстан мектебінің мұғаліміне қазақ тілінде көмектесесің. Материалды берілген пәнге, сыныпқа және Қазақстанның оқу бағдарламасындағы оқу мақсатына сәйкестендір. Мыналар міндетті: оқу мақсаты, сабақ мақсаты, бағалау критерийлері, өлшенетін дескрипторлар; сабақтың басы, ортасы, соңы және рефлексия. Тапсырмалар, жауаптар және бағалау бір-біріне сәйкес болсын. Уақыт көрсетілмесе 45 минут деп болжап, оны ашық көрсет. Ресми оқу мақсаты коды берілмесе «Ресми оқу мақсатының кодын мұғалім нақтылайды» деп жаз. Markdown қолдан; кестелерде әр жолды бөлек жаз, ұяшық ішіндегі жаңа жолды <br> деп бер.`;
 
 const SYSTEMS = {
   ayala: SCHOOL + ` Сен Аяла — ҚМЖ агентісің. №130 бұйрықтағы ҚМЖ нысанының 5 бағаны бар Markdown кестесін міндетті түрде жаса: Сабақтың кезеңі / уақыт | Педагогтің әрекеті | Оқушының әрекеті | Бағалау | Ресурстар. Алдымен мектеп, бөлім, педагог, күн, сынып, тақырып, оқу және сабақ мақсаттарын кестеде көрсет. Критерийлер, дескрипторлар, саралау, үй тапсырмасы мен рефлексияны қос.`,
@@ -17,8 +17,8 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return send(405, { error: 'Тек POST.' });
 
   try {
-    const key = (process.env.GROQ_API_KEY || "").replace(/\s+/g, '');
-    if (!key) return send(503, { error: 'Vercel-де GROQ_API_KEY орнатылмаған.' });
+    const key = (process.env.GEMINI_API_KEY || "").replace(/\s+/g, '');
+    if (!key) return send(503, { error: 'Vercel-де GEMINI_API_KEY орнатылмаған.' });
 
     let body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const mode = body.mode || 'agent';
@@ -29,36 +29,36 @@ export default async function handler(req, res) {
     const isGame = agentId === 'galileo' || mode === 'review';
     const system = mode === 'review' ? REVIEW_SYSTEM : (SYSTEMS[agentId] || SYSTEMS.ayala);
 
-    const host = ["api", "groq", "com"].join(".");
-    const groqUrl = `https://${host}/openai/v1/chat/completions`;
+    const domain = ["generativelanguage", "googleapis", "com"].join(".");
+    const url = `https://${domain}/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-    const response = await fetch(groqUrl, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + key
+        'x-goog-api-key': key
       },
       body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.35,
-        max_tokens: 4096,
-        ...(isGame ? { response_format: { type: 'json_object' } } : {})
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.35,
+          maxOutputTokens: 8192,
+          ...(isGame ? { responseMimeType: 'application/json' } : {})
+        }
       })
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       return send(502, {
-        error: 'Groq қатесі: ' + (data?.error?.message || response.status) + ' [Кілт басы: ' + key.slice(0, 8) + ', ұзындығы: ' + key.length + ']'
+        error: 'Gemini қатесі: ' + (data?.error?.message || response.status) + ' [Кілт басы: ' + key.slice(0, 8) + ', ұзындығы: ' + key.length + ']'
       });
     }
 
-    const firstChoice = Array.isArray(data?.choices) ? data.choices.at(0) : null;
-    const text = firstChoice?.message?.content || '';
+    const cand = Array.isArray(data?.candidates) ? data.candidates.at(0) : null;
+    const parts = cand?.content?.parts || [];
+    const text = parts.filter(p => typeof p.text === 'string').map(p => p.text).join('');
 
     if (mode === 'review') {
       try { return send(200, JSON.parse(text)); } catch { return send(200, { checks: {} }); }
@@ -72,5 +72,3 @@ export default async function handler(req, res) {
     return send(500, { error: err.message || 'Сервер қатесі.' });
   }
 }
-
-
