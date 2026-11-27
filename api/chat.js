@@ -51,8 +51,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return send(502, { error: 'Groq қатесі: ' + (data?.error?.message || response.status) });
+       if (!response.ok) {
+      return send(502, { error: 'Groq қатесі: ' + (data?.error?.message || response.status) + ' [Кілт басы: ' + key.slice(0, 8) + ', ұзындығы: ' + key.length + ']' });
+    }
+
     }
 
     const firstChoice = Array.isArray(data?.choices) ? data.choices.at(0) : null;
