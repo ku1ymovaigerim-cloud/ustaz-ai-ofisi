@@ -30,14 +30,13 @@ class GeminiError extends Error {
 }
 
 async function generateGemini(prompt, { system, json = false } = {}) {
-  const key = (process.env.GEMINI_API_KEY || "").trim();
+  const key = (process.env.GEMINI_API_KEY || "").replace(/\s+/g, '');
   if (!key) {
     throw new GeminiError('Vercel баптауында GEMINI_API_KEY орнатылмаған.', 503);
   }
 
-  const host = "://googleapis.com";
-  const ver = "v1beta";
-  const url = `https://${host}/${ver}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const domain = ["generativelanguage", "googleapis", "com"].join(".");
+  const endpoint = `https://${domain}/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
   const payload = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -57,9 +56,12 @@ async function generateGemini(prompt, { system, json = false } = {}) {
 
   let response;
   try {
-    response = await fetch(url, {
+    response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+      },
       body: JSON.stringify(payload)
     });
   } catch (e) {
