@@ -10,9 +10,9 @@ const SYSTEMS = {
   galileo: SCHOOL + ` Сен Галилей — ойын агентісің. Тек таза JSON қайтар: {"title":"...","objective":"...","assessment":["..."],"descriptors":["..."],"stages":{"start":"...","middle":"...","end":"..."},"questions":[{"question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}]}. Әдепкі 8 сұрақ болсын.`
 };
 
-async function askGemini(key, model, system, prompt, isGame) {
+async function askGemini(key, modelName, system, prompt, isGame) {
   const domain = ["generativelanguage", "googleapis", "com"].join(".");
-  const url = `https://${domain}/v1beta/models/${model}:generateContent`;
+  const url = `https://${domain}/v1beta/models/${modelName}:generateContent`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -63,9 +63,9 @@ export default async function handler(req, res) {
     const isGame = agentId === 'galileo';
     const system = SYSTEMS[agentId] || SYSTEMS.ayala;
 
-    let result = await askGemini(key, MODELS, system, prompt, isGame);
+    let result = await askGemini(key, MODELS.at(0), system, prompt, isGame);
     if (!result.ok) {
-      result = await askGemini(key, MODELS, system, prompt, isGame);
+      result = await askGemini(key, MODELS.at(1), system, prompt, isGame);
     }
 
     if (!result.ok) {
