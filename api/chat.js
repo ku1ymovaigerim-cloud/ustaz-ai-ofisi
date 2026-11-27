@@ -35,7 +35,9 @@ async function generateGemini(prompt, { system, json = false } = {}) {
     throw new GeminiError('Vercel баптауында GEMINI_API_KEY орнатылмаған.', 503);
   }
 
-  const url = "https://googleapis.com" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(key);
+  const host = "://googleapis.com";
+  const ver = "v1beta";
+  const url = `https://${host}/${ver}/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
 
   const payload = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -70,7 +72,8 @@ async function generateGemini(prompt, { system, json = false } = {}) {
     throw new GeminiError('Gemini қатесі: ' + detail, response.status === 429 ? 429 : 502);
   }
 
-  const parts = (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+  const cand = Array.isArray(data && data.candidates) ? data.candidates[0] : null;
+  const parts = (cand && cand.content && cand.content.parts) || [];
   const text = parts.filter(p => typeof p.text === 'string').map(p => p.text).join('');
 
   if (!text) {
