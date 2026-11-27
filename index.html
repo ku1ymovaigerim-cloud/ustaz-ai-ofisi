@@ -355,6 +355,11 @@ var baseToast=toast;toast=function(message){baseToast(message);if(/тексер�
     }
   };
 })();
+(function(){
+  var fixStyle = document.createElement('style');
+  fixStyle.textContent = '.drawer{width:min(820px,96vw)!important}.work-log ol{max-height:70px!important}.drawer .content{min-height:260px!important;max-height:55vh!important;overflow-y:auto!important;font-size:17px!important;line-height:1.65!important;padding:20px!important;background:#fff!important;color:#111!important}';
+  document.head.appendChild(fixStyle);
+})();
 
 </script>
 </body></html>
