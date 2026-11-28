@@ -29,10 +29,10 @@ const SYSTEMS = {
 **Жауабы:** (өлшем бірлігімен)
 **Бағалау критерийі және дескрипторлар:** (ұпайымен).`,
 
-    galileo: SCHOOL + ` Сен Акбар — интерактивті ойын шеберісің. Тек таза JSON қайтар (ешқандай артық мәтінсіз):
+  galileo: SCHOOL + ` Сен Акбар — интерактивті ойын шеберісің. Тек таза JSON қайтар (ешқандай артық мәтінсіз):
 {"title":"Ойын тақырыбы","objective":"Оқу мақсаты","assessment":["Критерий 1"],"descriptors":["Дескриптор 1"],"stages":{"start":"Басы","middle":"Ортасы","end":"Соңы"},"questions":[{"question":"Қысқа сұрақ","options":["A","B","C","D"],"answer":0,"explanation":"Қысқа түсіндірме"}]}.
 Сұрақтар саны дәл 5 болсын, сұрақтар мен жауаптар қысқа әрі нақты болсын.`
-
+};
 
 async function askOneModel(key, modelName, system, prompt, isGame) {
   const domain = ["generativelanguage", "googleapis", "com"].join(".");
@@ -50,7 +50,7 @@ async function askOneModel(key, modelName, system, prompt, isGame) {
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.35,
-        maxOutputTokens: 1850,
+        maxOutputTokens: 2000,
         thinkingConfig: { thinkingBudget: 0 },
         ...(isGame ? { responseMimeType: 'application/json' } : {})
       }
@@ -105,8 +105,16 @@ export default async function handler(req, res) {
     }
 
     if (isGame) {
-      const game = JSON.parse(text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''));
-      return send(200, { text, game });
+      const cleanJson = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/g, '').trim();
+      const firstBrace = cleanJson.indexOf('{');
+      const lastBrace = cleanJson.lastIndexOf('}');
+      const jsonStr = (firstBrace !== -1 && lastBrace !== -1) ? cleanJson.slice(firstBrace, lastBrace + 1) : cleanJson;
+      try {
+        const game = JSON.parse(jsonStr);
+        return send(200, { text: jsonStr, game });
+      } catch (e) {
+        return send(502, { error: 'Ойын құрылымы қате оқылды, қайта басыңыз.' });
+      }
     }
     return send(200, { text });
   } catch (err) {
