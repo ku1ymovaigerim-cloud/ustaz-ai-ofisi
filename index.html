@@ -716,6 +716,67 @@ var baseToast=toast;toast=function(message){baseToast(message);if(/тексер�
     };
   }
 })();
+(function(){
+  var coordName = 'Айгерим';      // Координатор қыздың аты
+  var coordDative = 'Айгеримге';  // Барыс септігі
+  var gameAgentName = 'Акбар';    // Ойын агентінің аты
+
+  var logo = document.querySelector('.logo');
+  if (logo) logo.innerHTML = 'K.A.A <b>AI OFFICE</b>';
+  document.title = 'K.A.A AI OFFICE';
+
+  document.querySelectorAll('.actions span').forEach(function(sp) {
+    if (sp.textContent.includes('Gemini')) sp.remove();
+  });
+
+  if (typeof agents !== 'undefined' && agents.galileo) {
+    agents.galileo.name = gameAgentName;
+  }
+
+  var origFillRect = CanvasRenderingContext2D.prototype.fillRect;
+  CanvasRenderingContext2D.prototype.fillRect = function(x, y, w, h) {
+    if (this.fillStyle === '#634531' && w === 14 && h === 4) {
+      var cx = x + 6, cy = y + 34;
+      this.fillStyle = '#5a3520';
+      origFillRect.call(this, cx - 16, cy - 50, 5, 35);
+      origFillRect.call(this, cx + 12, cy - 49, 5, 36);
+      return;
+    }
+    return origFillRect.apply(this, arguments);
+  };
+
+  function swapNames(str) {
+    return str
+      .replace(/Акбарға/g, coordDative)
+      .replace(/Акбар/g, coordName)
+      .replace(/Галилейден/g, gameAgentName + 'дан')
+      .replace(/Галилейге/g, gameAgentName + 'ға')
+      .replace(/Галилей/g, gameAgentName);
+  }
+
+  var origFillText = CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+    if (typeof text === 'string') text = swapNames(text);
+    return origFillText.apply(this, [text, x, y, maxWidth]);
+  };
+
+  function updateDomTexts(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    var node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeValue && (node.nodeValue.includes('Акбар') || node.nodeValue.includes('Галилей'))) {
+        node.nodeValue = swapNames(node.nodeValue);
+      }
+    }
+    var inp = document.getElementById('prompt');
+    if (inp && inp.placeholder.includes('Акбар')) {
+      inp.placeholder = coordDative + ' тапсырма жазыңыз…';
+    }
+  }
+  updateDomTexts(document.body);
+  new MutationObserver(function() { updateDomTexts(document.body); })
+    .observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
 
 </script>
 </body></html>
