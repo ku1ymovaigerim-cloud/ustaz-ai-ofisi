@@ -556,6 +556,166 @@ var baseToast=toast;toast=function(message){baseToast(message);if(/тексер�
     return origShowResult.apply(this, arguments);
   };
 })();
+(function(){
+  function drawRichIllustration(title, hint, idx) {
+    var cv = document.createElement('canvas');
+    cv.width = 560;
+    cv.height = 440;
+    var ctx = cv.getContext('2d');
+
+    var themes = [
+      { bg: '#eef6fa', hdr: '#1b4965', acc: '#2b9348', sub: '#cae9ff' },
+      { bg: '#f4f1fa', hdr: '#3c096c', acc: '#d97706', sub: '#e0aaff' },
+      { bg: '#eefaf4', hdr: '#1b4332', acc: '#0077b6', sub: '#b7e4c7' },
+      { bg: '#fff8ee', hdr: '#7f4f24', acc: '#2e7663', sub: '#fde4cf' }
+    ];
+    var th = themes[idx % themes.length];
+
+    // Негізгі карточка фоны
+    ctx.fillStyle = th.bg;
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 544, 424, 22);
+    ctx.fill();
+    ctx.strokeStyle = th.hdr;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Жоғарғы тақырып жолағы
+    ctx.fillStyle = th.hdr;
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 544, 52, 18);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 17px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('КӨРНЕКІ ИЛЛЮСТРАЦИЯ · СЛАЙД ' + (idx + 1), 280, 40);
+
+    var low = (title + ' ' + hint).toLowerCase();
+
+    if (/тартылыс|ғарыш|планета|жер|күн|астрономия|орбита|g/.test(low)) {
+      // Бүкіләлемдік тартылыс / Планеталар схемасы
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.roundRect(30, 74, 500, 240, 14); ctx.fill();
+      // Орбита
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.ellipse(280, 194, 175, 78, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      // Үлкен дене (Жер/Күн)
+      ctx.fillStyle = '#3b82f6';
+      ctx.beginPath(); ctx.arc(210, 194, 42, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath(); ctx.arc(198, 184, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.fillText('M₁', 210, 200);
+      // Кіші дене (Ай/Серік)
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(410, 194, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 15px Arial'; ctx.fillText('M₂', 410, 199);
+      // Тартылыс күші векторлары
+      ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(256, 194); ctx.lineTo(315, 194); ctx.lineTo(303, 185); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(384, 194); ctx.lineTo(325, 194); ctx.lineTo(337, 203); ctx.stroke();
+      ctx.fillStyle = '#fde047'; ctx.font = 'bold 17px Arial';
+      ctx.fillText('F = G · (M₁ · M₂) / R²', 280, 112);
+    } else if (/күш|физика|қозғалыс|жылдамдық|энергия|гук|қысым|ток/.test(low)) {
+      // Физикалық тәжірибе / Векторлық схема
+      ctx.fillStyle = '#94a3b8'; ctx.fillRect(50, 255, 460, 14);
+      ctx.fillStyle = th.hdr; ctx.beginPath(); ctx.roundRect(160, 175, 120, 80, 10); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.fillText('m', 220, 222);
+      ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(285, 215); ctx.lineTo(435, 215); ctx.lineTo(418, 202); ctx.moveTo(435, 215); ctx.lineTo(418, 228); ctx.stroke();
+      ctx.fillStyle = '#dc2626'; ctx.font = 'bold 20px Arial'; ctx.fillText('F (Күш)', 360, 192);
+    } else if (/матем|теңдеу|график|функция|геометрия|бұрыш|үшбұрыш/.test(low)) {
+      // Математикалық график және фигура
+      ctx.strokeStyle = '#334155'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(80, 275); ctx.lineTo(480, 275); ctx.moveTo(280, 85); ctx.lineTo(280, 305); ctx.stroke();
+      ctx.strokeStyle = th.acc; ctx.lineWidth = 4;
+      ctx.beginPath();
+      for (var x = -140; x <= 140; x += 4) {
+        var py = 270 - (x * x) / 110;
+        if (x === -140) ctx.moveTo(280 + x, py); else ctx.lineTo(280 + x, py);
+      }
+      ctx.stroke();
+    } else if (/химия|атом|молекула|реакция|элемент|зат/.test(low)) {
+      // Атом және молекула құрылымы
+      ctx.fillStyle = th.acc; ctx.beginPath(); ctx.arc(280, 195, 24, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = th.hdr; ctx.lineWidth = 3;
+      [0, Math.PI / 3, -Math.PI / 3].forEach(function(a) {
+        ctx.save(); ctx.translate(280, 195); ctx.rotate(a);
+        ctx.beginPath(); ctx.ellipse(0, 0, 125, 42, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      });
+    } else {
+      // Әмбебап инфографика: 3 негізгі қадам
+      var labels = ['1. Негізгі ұғым', '2. Талдау', '3. Қорытынды'];
+      labels.forEach(function(lbl, k) {
+        var bx = 42 + k * 162;
+        ctx.fillStyle = k === 1 ? th.acc : th.hdr;
+        ctx.beginPath(); ctx.roundRect(bx, 145, 148, 86, 14); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 15px Arial';
+        ctx.fillText(lbl, bx + 74, 193);
+        if (k < 2) {
+          ctx.fillStyle = th.hdr; ctx.font = 'bold 22px Arial';
+          ctx.fillText('→', bx + 155, 194);
+        }
+      });
+    }
+
+    // Төменгі түсіндірме панелі
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.roundRect(26, 326, 508, 88, 12); ctx.fill();
+    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#1e293b'; ctx.font = 'bold 14px Arial';
+    var cleanHint = (hint || title).replace(/[\[\]]/g, '').trim();
+    ctx.fillText(cleanHint.slice(0, 52), 280, 362);
+    if (cleanHint.length > 52) ctx.fillText(cleanHint.slice(52, 104), 280, 388);
+
+    return cv.toDataURL('image/png');
+  }
+
+  // Түпнұсқа yc (slidesBlob) функциясын кеңейтіп, әр слайдқа сурет қосу
+  if (typeof OfficeExports !== 'undefined') {
+    var origCreate = OfficeExports.createFile;
+    OfficeExports.createFile = async function(agentId, text) {
+      if (agentId === 'akbar' || agentId === 'emma') {
+        var sections = OfficeExports.slideSections(text);
+        var res = await origCreate(agentId, text);
+        if (typeof JSZip !== 'undefined' && res && res.blob) {
+          var zip = await JSZip.loadAsync(res.blob);
+          for (var i = 0; i < sections.length; i++) {
+            var sNum = i + 1;
+            var slidePath = 'ppt/slides/slide' + sNum + '.xml';
+            var relsPath = 'ppt/slides/_rels/slide' + sNum + '.xml.rels';
+            var slideFile = zip.file(slidePath);
+            var relsFile = zip.file(relsPath);
+            if (!slideFile || !relsFile) continue;
+
+            var visNote = (sections[i].notes || []).find(function(n) { return /Көрнекілік/i.test(n); }) || sections[i].title;
+            var dataUrl = drawRichIllustration(sections[i].title, visNote.replace(/^Көрнекілік\s*:\s*/i, ''), i);
+            var base64 = dataUrl.split(',').at(1);
+            var imgName = 'auto_img_' + sNum + '.png';
+            zip.file('ppt/media/' + imgName, base64, { base64: true });
+
+            var relsXml = await relsFile.async('string');
+            var rId = 'rId99';
+            relsXml = relsXml.replace('</Relationships>', '<Relationship Id="' + rId + '" Type="http://openxmlformats.org" Target="../media/' + imgName + '"/></Relationships>');
+            zip.file(relsPath, relsXml);
+
+            var slideXml = await slideFile.async('string');
+            // Мәтін блогының енін сол жаққа қысып (7.2 дюйм = 6583680 EMU), оң жағына сурет қою
+            slideXml = slideXml.replace(/cx="10881360"/g, 'cx="6400000"');
+            var picXml = '<p:pic><p:nvPicPr><p:cNvPr id="999" name="Illustration ' + sNum + '"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="' + rId + '"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="7350000" y="1750000"/><a:ext cx="4450000" cy="3500000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
+            slideXml = slideXml.replace('</p:spTree>', picXml + '</p:spTree>');
+            zip.file(slidePath, slideXml);
+          }
+          var newBlob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+          return { blob: newBlob, name: 'Презентация.pptx' };
+        }
+        return res;
+      }
+      return origCreate(agentId, text);
+    };
+  }
+})();
 
 </script>
 </body></html>
