@@ -365,6 +365,197 @@ var baseToast=toast;toast=function(message){baseToast(message);if(/тексер�
   fixStyle.textContent = '.drawer{width:min(820px,96vw)!important;bottom:74px!important}.work-log ol{max-height:55px!important}.drawer .content{flex:1!important;min-height:140px!important;overflow-y:auto!important;font-size:16px!important;line-height:1.6!important;padding:16px!important;background:#fff!important;color:#111!important}';
   document.head.appendChild(fixStyle);
 })();
+(function(){
+  function cleanMathText(str) {
+    return String(str || '')
+      .replace(/\$\$/g, '')
+      .replace(/\$/g, '')
+      .replace(/\\times/g, '×')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\div/g, '÷')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\Delta/g, 'Δ')
+      .replace(/\\rho/g, 'ρ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1) / ($2)')
+      .replace(/\^2/g, '²')
+      .replace(/\^3/g, '³');
+  }
+
+  function makeSlideIllustration(title, visualHint, index) {
+    var cv = document.createElement('canvas');
+    cv.width = 520;
+    cv.height = 420;
+    var ctx = cv.getContext('2d');
+
+    var palettes = [
+      ['#1e5f74', '#2e8b57', '#e8f4f8'],
+      ['#2b4c7e', '#d97706', '#eef3fa'],
+      ['#3b5998', '#0d9488', '#edf7f6'],
+      ['#4a5568', '#2b6cb0', '#ebf4ff'],
+      ['#285e61', '#dd6b20', '#fffaf0']
+    ];
+    var pal = palettes[index % palettes.length];
+
+    ctx.fillStyle = pal.at(2);
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 500, 400, 24);
+    ctx.fill();
+    ctx.strokeStyle = pal.at(0);
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.fillStyle = pal.at(0);
+    ctx.beginPath();
+    ctx.roundRect(10, 10, 500, 54, [24, 24, 0, 0]);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('КӨРНЕКІ СХЕМА · СЛАЙД ' + (index + 1), 260, 44);
+
+    // Тақырыпқа сай визуалды графика
+    var low = (title + ' ' + visualHint).toLowerCase();
+    ctx.strokeStyle = pal.at(0);
+    ctx.fillStyle = pal.at(1);
+    ctx.lineWidth = 3;
+
+    if (/күш|физика|жылдамдық|қозғалыс|масса|энергия|гук|серпім/.test(low)) {
+      // Физикалық векторлық схема
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(60, 260, 400, 14);
+      ctx.fillStyle = pal.at(0);
+      ctx.fillRect(190, 185, 110, 75);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px Arial';
+      ctx.fillText('m', 245, 230);
+      // Күш векторы
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(300, 222);
+      ctx.lineTo(420, 222);
+      ctx.lineTo(405, 210);
+      ctx.moveTo(420, 222);
+      ctx.lineTo(405, 234);
+      ctx.stroke();
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 20px Arial';
+      ctx.fillText('F = m × a', 360, 200);
+    } else if (/матем|теңдеу|график|функция|геометрия|үшбұрыш/.test(low)) {
+      // Координаталық жазықтық және график
+      ctx.strokeStyle = '#334155';
+      ctx.beginPath();
+      ctx.moveTo(90, 270); ctx.lineTo(430, 270);
+      ctx.moveTo(260, 100); ctx.lineTo(260, 310);
+      ctx.stroke();
+      ctx.strokeStyle = pal.at(1);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      for (var x = -120; x <= 120; x += 5) {
+        var px = 260 + x;
+        var py = 265 - (x * x) / 95;
+        if (x === -120) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    } else if (/химия|атом|молекула|реакция|зат/.test(low)) {
+      // Атом моделі
+      ctx.beginPath(); ctx.arc(260, 205, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = pal.at(0);
+      [0, Math.PI / 3, -Math.PI / 3].forEach(function(ang) {
+        ctx.save(); ctx.translate(260, 205); ctx.rotate(ang);
+        ctx.beginPath(); ctx.ellipse(0, 0, 110, 38, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      });
+    } else if (/биология|жасуша|өсімдік|табиғат|экология/.test(low)) {
+      // Органикалық цикл схемасы
+      [0, 1, 2].forEach(function(k) {
+        var ang = -Math.PI / 2 + k * (Math.PI * 2 / 3);
+        var cx = 260 + Math.cos(ang) * 85;
+        var cy = 205 + Math.sin(ang) * 65;
+        ctx.fillStyle = k === 0 ? pal.at(0) : pal.at(1);
+        ctx.beginPath(); ctx.arc(cx, cy, 34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+        ctx.fillText((k + 1) + '-кезең', cx, cy + 5);
+      });
+    } else {
+      // Әмбебап құрылымдық блок-схема
+      var steps = ['1. Ұғым', '2. Талдау', '3. Нәтиже'];
+      steps.forEach(function(st, k) {
+        var bx = 55 + k * 145;
+        ctx.fillStyle = k === 1 ? pal.at(1) : pal.at(0);
+        ctx.beginPath(); ctx.roundRect(bx, 165, 125, 70, 12); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+        ctx.fillText(st, bx + 62, 205);
+      });
+    }
+
+    // Төменгі сипаттама жолағы
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(24, 315, 472, 78, 12);
+    ctx.fill();
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '15px Arial';
+    var desc = cleanMathText(visualHint || title).slice(0, 95);
+    ctx.fillText(desc.slice(0, 48), 260, 348);
+    if (desc.length > 48) ctx.fillText(desc.slice(48), 260, 372);
+
+    return cv.toDataURL('image/png');
+  }
+
+  if (typeof OfficeExports !== 'undefined' && OfficeExports.createFile) {
+    var origCreateFile = OfficeExports.createFile;
+    OfficeExports.createFile = async function(agentId, text) {
+      var cleaned = cleanMathText(text);
+      if (agentId === 'akbar' || agentId === 'emma') {
+        var rawSlides = cleaned.split(/##\s*СЛАЙД\s*\d+\s*[:.\-–—]?\s*/i).filter(function(s) { return s.trim(); });
+        if (rawSlides.length > 0 && typeof PptxGenJS !== 'undefined') {
+          var pptx = new PptxGenJS();
+          pptx.layout = 'LAYOUT_WIDE';
+          rawSlides.forEach(function(block, idx) {
+            var lines = block.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+            var title = (lines.at(0) || ('Слайд ' + (idx + 1))).replace(/\*\*/g, '');
+            var visualLine = lines.find(function(l) { return /^Көрнекілік\s*:/i.test(l); }) || '';
+            var noteLine = lines.find(function(l) { return /^Ескерту\s*:/i.test(l); }) || '';
+            var bullets = lines.slice(1).filter(function(l) {
+              return !/^Көрнекілік\s*:/i.test(l) && !/^Ескерту\s*:/i.test(l);
+            }).map(function(l) { return l.replace(/^[-*•]\s*/, '• ').replace(/\*\*/g, ''); });
+
+            var slide = pptx.addSlide();
+            slide.background = { color: 'F4F8FB' };
+            slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 13.33, h: 0.16, fill: { color: '2E7663' } });
+            slide.addText(title, { x: 0.6, y: 0.35, w: 12.1, h: 0.85, fontSize: 26, bold: true, color: '163A4A', fontFace: 'Arial' });
+            slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 1.35, w: 7.3, h: 5.3, fill: { color: 'FFFFFF' }, line: { color: 'CBD5E1', width: 1 } });
+            slide.addText(bullets.join('\n\n') || title, { x: 0.85, y: 1.55, w: 6.8, h: 4.9, fontSize: 19, color: '1E293B', fontFace: 'Arial', valign: 'top' });
+
+            var imgData = makeSlideIllustration(title, visualLine.replace(/^Көрнекілік\s*:/i, '').trim(), idx);
+            slide.addImage({ data: imgData, x: 8.15, y: 1.35, w: 4.6, h: 3.8 });
+            if (noteLine) slide.addNotes(noteLine);
+          });
+          var buf = await pptx.write({ outputType: 'arraybuffer' });
+          return { blob: new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }), name: 'Презентация.pptx' };
+        }
+      }
+      return origCreateFile(agentId, cleaned);
+    };
+  }
+
+  var origShowResult = showResult;
+  showResult = async function() {
+    if (active && results[active]) {
+      results[active] = cleanMathText(results[active]);
+    }
+    return origShowResult.apply(this, arguments);
+  };
+})();
 
 </script>
 </body></html>
