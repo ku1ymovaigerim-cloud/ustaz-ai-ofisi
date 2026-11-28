@@ -29,9 +29,10 @@ const SYSTEMS = {
 **Жауабы:** (өлшем бірлігімен)
 **Бағалау критерийі және дескрипторлар:** (ұпайымен).`,
 
-  galileo: SCHOOL + ` Сен Акбар — ойын шеберісің. Тек таза JSON қайтар (Markdown-сыз):
-{"title":"...","objective":"...","assessment":["..."],"descriptors":["..."],"stages":{"start":"...","middle":"...","end":"..."},"questions":[{"question":"...","options":["...","...","...","..."],"answer":0,"explanation":"..."}]}. 8 бірегей сұрақ болсын.`
-};
+    galileo: SCHOOL + ` Сен Акбар — интерактивті ойын шеберісің. Тек таза JSON қайтар (ешқандай артық мәтінсіз):
+{"title":"Ойын тақырыбы","objective":"Оқу мақсаты","assessment":["Критерий 1"],"descriptors":["Дескриптор 1"],"stages":{"start":"Басы","middle":"Ортасы","end":"Соңы"},"questions":[{"question":"Қысқа сұрақ","options":["A","B","C","D"],"answer":0,"explanation":"Қысқа түсіндірме"}]}.
+Сұрақтар саны дәл 5 болсын, сұрақтар мен жауаптар қысқа әрі нақты болсын.`
+
 
 async function askOneModel(key, modelName, system, prompt, isGame) {
   const domain = ["generativelanguage", "googleapis", "com"].join(".");
